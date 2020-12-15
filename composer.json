@@ -1,0 +1,118 @@
+{
+  "name": "acquia/acquia-cms-project",
+  "type": "project",
+  "description": "Project template for Drupal 9 sites built with the Acquia CMS distribution.",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": "~7.3",
+    "acquia/acquia_cms": "1.0.0-beta4",
+    "acquia/drupal-environment-detector": "^1",
+    "acquia/memcache-settings": "^1",
+    "cweagans/composer-patches": "^1.6.0",
+    "drupal/core": "9.0.10",
+    "drupal/core-composer-scaffold": "^9",
+    "drush/drush": "^10",
+    "oomphinc/composer-installers-extender": "^1.1 || ^2"
+  },
+  "require-dev": {},
+  "config": {
+    "process-timeout": 0,
+    "sort-packages": true
+  },
+  "extra": {
+    "composer-exit-on-patch-failure": true,
+    "drupal-scaffold": {
+      "allowed-packages": [
+        "drupal/core",
+        "acquia/acquia_cms"
+      ],
+      "locations": {
+        "web-root": "docroot/",
+        "profile-root": "docroot/profiles/contrib/acquia_cms"
+      },
+      "file-mapping": {
+        "[profile-root]/.editorconfig": false,
+        "[profile-root]/.gitattributes": false,
+        "[profile-root]/.travis.yml": false,
+        "[profile-root]/acquia-pipelines.yml": false
+      },
+      "gitignore": true
+    },
+    "enable-patching": true,
+    "installer-paths": {
+      "docroot/core": [
+        "type:drupal-core"
+      ],
+      "docroot/libraries/{$name}": [
+        "type:drupal-library",
+        "type:bower-asset",
+        "type:npm-asset"
+      ],
+      "docroot/modules/contrib/{$name}": [
+        "type:drupal-module"
+      ],
+      "docroot/profiles/contrib/{$name}": [
+        "type:drupal-profile"
+      ],
+      "docroot/themes/contrib/{$name}": [
+        "type:drupal-theme"
+      ],
+      "drush/Commands/contrib/{$name}": [
+        "type:drupal-drush"
+      ]
+    },
+    "installer-types": [
+      "bower-asset",
+      "npm-asset"
+    ],
+    "patchLevel": {
+      "drupal/core": "-p2"
+    }
+  },
+  "repositories": {
+    "drupal": {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    },
+    "assets": {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    },
+    "acquia-cms": {
+        "type": "vcs",
+        "url": "https://github.com/acquia/acquia_cms.git",
+        "no-api": true
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "scripts": {
+    "pre-update-cmd": [
+      "@putenv COMPOSER_MEMORY_LIMIT=2G"
+    ],
+    "remove-git-submodules" : "find . -mindepth 2 -type d -name .git | xargs rm -rf",
+    "post-update-cmd": [
+      "composer run-script remove-git-submodules",
+      "composer install:frontend",
+      "composer build:frontend"
+    ],
+    "post-install-cmd": [
+      "composer run-script post-update-cmd"
+    ],
+    "install:frontend": [
+      "@putenv PROFILE_DIR=docroot/profiles/contrib/acquia_cms",
+      "Composer\\Config::disableProcessTimeout",
+      "cd $PROFILE_DIR/themes/acquia_claro && npm install"
+    ],
+    "build:frontend": [
+      "@putenv PROFILE_DIR=docroot/profiles/contrib/acquia_cms",
+      "Composer\\Config::disableProcessTimeout",
+      "cd $PROFILE_DIR/themes/acquia_claro && npm run build",
+      "mkdir -p $PROFILE_DIR/modules/acquia_cms_toolbar/css",
+      "cp $PROFILE_DIR/themes/acquia_claro/css/acquia_cms_toolbar.css $PROFILE_DIR/modules/acquia_cms_toolbar/css"
+    ],
+    "nuke": [
+      "rm -rf docroot vendor composer.lock"
+    ]
+  }
+}
